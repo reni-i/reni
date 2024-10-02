@@ -4,7 +4,7 @@ print(" Do you want to buy pizza? please select the menu^^ ")
 # Define pizza size
 small_pizza = 50000
 medium_pizza = 75000
-large_pizza = 10000
+large_pizza = 100000
 
 # Define crust prices
 thin_crust = 20000
