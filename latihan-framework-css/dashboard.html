@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard - WebGIS SDGs Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    #map { height: 350px; border: 1px solid black; }
+  </style>
 </head>
 
 <body class="bg-pink-50 font-sans min-h-screen flex flex-col">
@@ -21,32 +26,109 @@
 
     <!-- Sidebar -->
     <aside class="w-64 bg-white p-6 border-r border-pink-200">
-      <h2 class="text-md font-bold text-pink-600 mb-4">🧁 Filter Kategori</h2>
+      <h2 class="text-md font-bold text-pink-600 mb-4">🧁 Filter Jenjang</h2>
       <ul class="space-y-2 text-sm text-pink-700">
-        <li><input type="checkbox" class="mr-2 accent-pink-500">Pendidikan</li>
-        <li><input type="checkbox" class="mr-2 accent-pink-500">Kesehatan</li>
-        <li><input type="checkbox" class="mr-2 accent-pink-500">Lingkungan</li>
+        <li><input type="checkbox" value="SMP" class="filter-checkbox mr-2 accent-pink-500">SMP</li>
+        <li><input type="checkbox" value="SMA" class="filter-checkbox mr-2 accent-pink-500">SMA</li>
       </ul>
-      <button class="mt-6 bg-pink-100 text-pink-600 font-semibold py-2 px-4 w-full rounded hover:bg-pink-200 transition">Logout</button>
+
+      <a class="block mt-6 bg-pink-100 text-pink-600 font-semibold py-2 px-4 w-full text-center rounded hover:bg-pink-200 transition" href="login.html">Logout</a>
+
     </aside>
 
-    <!-- Main Section -->
-    <main class="flex-1 p-6">
-      <!-- Peta -->
-      <div class="bg-pink-50 rounded-lg flex">
-        <iframe class="mt-4 w-full rounded-md" height="450"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31658.74717143646!2d112.68914447431642!3d-7.315266599999986!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fb7081be4f83%3A0xa9c00ebea3e64b3d!2sUniversitas%20Negeri%20Surabaya%20-%20Kampus%201!5e0!3m2!1sid!2sid!4v1747572937150!5m2!1sid!2sid"
-          style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+ <!-- Main Content -->
+  <main class="flex-1 p-8 bg-pink-200 text-gray-800">
+    <h1 class="text-2xl font-bold text-[#3e495e] mb-6">WebGIS SDGs Tracker 🌎</h1>
 
-        <!-- Detail Lokasi -->
-        <div class="bg-pink-100 p-4 shadow-md rounded-md absolute right-8 bottom-8 w-64 border border-pink-200">
-          <h3 class="text-sm font-bold text-pink-700 mb-2">📍 Detail Lokasi</h3>
-          <p class="text-sm text-pink-800"><strong>Nama Lokasi:</strong> Universitas Negeri Surabaya</p>
-          <p class="text-sm text-pink-800"><strong>Kategori:</strong> Pendidikan</p>
-          <p class="text-sm text-pink-800"><strong>Progress SDGs:</strong> 90%</p>
-        </div>
-      </div>
-    </main>
+    <div id="map" class="mb-8"></div>
+
+    <section id="location-details" class="bg-pink-300 p-4 rounded shadow-md w-xs max-w-xs hidden">
+      <h3 class="text-2xl font-bold text-black-500 mb-2">Detail Lokasi 📍</h3>
+      <p><strong>Nama Provinsi :</strong> <span id="provinsi"></span></p>
+      <p><strong>Jenjang Pendidikan:</strong> <span id="jenjang"></span></p>
+      <p><strong>Jumlah Sekolah:</strong> <span id="jumlah"></span></p>
+    </section>
+
+    <script>
+      var map = L.map('map').setView([-2.5, 118], 5);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(map);
+
+      var dataLokasi = [
+        { provinsi: "Aceh", lat: 5.55, lng: 95.32, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1200, SMA: 800 } },
+        { provinsi: "Sumatera Utara", lat: 3.59, lng: 98.67, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1800, SMA: 1200 } },
+        { provinsi: "Sumatera Barat", lat: -0.95, lng: 100.35, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1100, SMA: 700 } },
+        { provinsi: "Riau", lat: 0.51, lng: 101.45, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1400, SMA: 900 } },
+        { provinsi: "Jambi", lat: -1.59, lng: 103.61, jenjang: ["SMP", "SMA"], jumlah: { SMP: 900, SMA: 600 } },
+        { provinsi: "Sumatera Selatan", lat: -3.32, lng: 104.92, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1500, SMA: 1000 } },
+        { provinsi: "Bengkulu", lat: -3.8, lng: 102.26, jenjang: ["SMP", "SMA"], jumlah: { SMP: 700, SMA: 500 } },
+        { provinsi: "Lampung", lat: -5.45, lng: 105.26, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1600, SMA: 1100 } },
+        { provinsi: "Kepulauan Bangka Belitung", lat: -2.74, lng: 106.44, jenjang: ["SMP", "SMA"], jumlah: { SMP: 500, SMA: 300 } },
+        { provinsi: "Kepulauan Riau", lat: 3.99, lng: 108.37, jenjang: ["SMP", "SMA"], jumlah: { SMP: 600, SMA: 400 } },
+        { provinsi: "DKI Jakarta", lat: -6.2, lng: 106.82, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1000, SMA: 700 } },
+        { provinsi: "Jawa Barat", lat: -6.91, lng: 107.61, jenjang: ["SMP", "SMA"], jumlah: { SMP: 3500, SMA: 2500 } },
+        { provinsi: "Jawa Tengah", lat: -7.15, lng: 110.14, jenjang: ["SMP", "SMA"], jumlah: { SMP: 3200, SMA: 2300 } },
+        { provinsi: "DI Yogyakarta", lat: -7.8, lng: 110.37, jenjang: ["SMP", "SMA"], jumlah: { SMP: 600, SMA: 400 } },
+        { provinsi: "Jawa Timur", lat: -7.25, lng: 112.77, jenjang: ["SMP", "SMA"], jumlah: { SMP: 3300, SMA: 2400 } },
+        { provinsi: "Banten", lat: -6.12, lng: 106.15, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1300, SMA: 900 } },
+        { provinsi: "Bali", lat: -8.34, lng: 115.09, jenjang: ["SMP", "SMA"], jumlah: { SMP: 800, SMA: 600 } },
+        { provinsi: "Nusa Tenggara Barat", lat: -8.65, lng: 117.36, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1000, SMA: 700 } },
+        { provinsi: "Nusa Tenggara Timur", lat: -10.17, lng: 123.61, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1200, SMA: 800 } },
+        { provinsi: "Kalimantan Barat", lat: 0.13, lng: 111.1, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1100, SMA: 700 } },
+        { provinsi: "Kalimantan Tengah", lat: -1.61, lng: 113.38, jenjang: ["SMP", "SMA"], jumlah: { SMP: 900, SMA: 600 } },
+        { provinsi: "Kalimantan Selatan", lat: -3.32, lng: 114.59, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1000, SMA: 700 } },
+        { provinsi: "Kalimantan Timur", lat: 0.53, lng: 117.14, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1000, SMA: 700 } },
+        { provinsi: "Kalimantan Utara", lat: 3.3, lng: 117.6, jenjang: ["SMP", "SMA"], jumlah: { SMP: 400, SMA: 300 } },
+        { provinsi: "Sulawesi Utara", lat: 1.49, lng: 124.84, jenjang: ["SMP", "SMA"], jumlah: { SMP: 800, SMA: 500 } },
+        { provinsi: "Sulawesi Tengah", lat: -0.9, lng: 119.87, jenjang: ["SMP", "SMA"], jumlah: { SMP: 900, SMA: 600 } },
+        { provinsi: "Sulawesi Selatan", lat: -5.14, lng: 119.43, jenjang: ["SMP", "SMA"], jumlah: { SMP: 1300, SMA: 900 } },
+        { provinsi: "Sulawesi Tenggara", lat: -4.14, lng: 122.05, jenjang: ["SMP", "SMA"], jumlah: { SMP: 800, SMA: 500 } },
+        { provinsi: "Gorontalo", lat: 0.54, lng: 123.06, jenjang: ["SMP", "SMA"], jumlah: { SMP: 400, SMA: 300 } },
+        { provinsi: "Sulawesi Barat", lat: -2.68, lng: 119.23, jenjang: ["SMP", "SMA"], jumlah: { SMP: 500, SMA: 300 } },
+        { provinsi: "Maluku", lat: -3.7, lng: 128.18, jenjang: ["SMP", "SMA"], jumlah: { SMP: 600, SMA: 400 } },
+        { provinsi: "Maluku Utara", lat: 1.63, lng: 127.97, jenjang: ["SMP", "SMA"], jumlah: { SMP: 500, SMA: 300 } },
+        { provinsi: "Papua Barat", lat: -0.88, lng: 131.26, jenjang: ["SMP", "SMA"], jumlah: { SMP: 400, SMA: 300 } },
+        { provinsi: "Papua", lat: -4.27, lng: 138.08, jenjang: ["SMP", "SMA"], jumlah: { SMP: 800, SMA: 500 } }
+      ];
+
+      var markers = [];
+
+      function renderMarkers() {
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
+
+        const selected = Array.from(document.querySelectorAll('.filter-checkbox:checked')).map(cb => cb.value);
+
+        dataLokasi.forEach(function(lokasi) {
+          const isVisible = lokasi.jenjang.some(j => selected.includes(j));
+          if (isVisible) {
+            var marker = L.marker([lokasi.lat, lokasi.lng]).addTo(map);
+            marker.bindPopup(lokasi.provinsi);
+            marker.on('click', function() {
+              const filteredJenjang = lokasi.jenjang.filter(j => selected.includes(j));
+              const jumlahText = filteredJenjang.map(j => `${j}: ${lokasi.jumlah[j]}`).join(', ');
+
+              document.getElementById('location-details').classList.remove('hidden');
+              document.getElementById('provinsi').textContent = lokasi.provinsi;
+              document.getElementById('jenjang').textContent = filteredJenjang.join(' & ');
+              document.getElementById('jumlah').textContent = jumlahText;
+            });
+            markers.push(marker);
+          }
+        });
+      }
+
+      // Initial render
+      renderMarkers();
+
+      // Filter checkbox listener
+      document.querySelectorAll('.filter-checkbox').forEach(cb => {
+        cb.addEventListener('change', renderMarkers);
+      });
+    </script>
+  </main>
   </div>
 </body>
 
